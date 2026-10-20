@@ -1,6 +1,6 @@
 # Gallardito Converter
 
-Convertidor de archivos web que funciona **100 % en el navegador**: los archivos nunca se suben a ningún servidor.
+Convertidor de archivos web que funciona **en el navegador**: los archivos no se suben a ningún sitio. La única excepción es **DOCX → PDF/RTF**, que se hace con LibreOffice en nuestro propio servidor para conservar la maquetación (en RAM y borrado al instante).
 
 ![Cabecera](public/cabecera.webp)
 
@@ -31,7 +31,8 @@ El archivo convertido se descarga con el mismo nombre y la nueva extensión. Si 
 
 ## Privacidad y legalidad (España)
 
-- **No hay servidor de conversión.** La web es estática; la conversión ocurre en el dispositivo del usuario.
+- Casi todo se convierte en el dispositivo del usuario.
+- DOCX → PDF/RTF: `public/api/convert.php` recibe el documento directamente en `/dev/shm` (RAM), lanza LibreOffice con un perfil temporal sin macros ni enlaces externos, devuelve el resultado y lo borra todo, también si falla. Una conversión a la vez, máximo 90 s.
 - La página lleva una política de seguridad (CSP) con `connect-src 'self'`: el navegador bloquea cualquier envío de datos a otros dominios.
 - Sin cookies, sin analítica y sin recursos de terceros (las tipografías van incluidas).
 - El aviso legal, la política de privacidad y la de cookies están en `src/legal.js`. **Hay que rellenar los campos `[COMPLETAR]`** con los datos del titular (LSSI-CE art. 10).
@@ -47,6 +48,14 @@ npm run preview   # prueba la versión de producción
 
 La carpeta `dist/` se puede copiar a cualquier servidor web estático y funciona en cualquier subcarpeta (las rutas son relativas).
 
+### Requisitos del servidor
+
+Apache con PHP 8 y LibreOffice sin interfaz, más fuentes compatibles con las de Office:
+
+```bash
+sudo apt install --no-install-recommends libreoffice-writer-nogui fonts-crosextra-carlito fonts-crosextra-caladea fonts-liberation fonts-dejavu fonts-noto-core
+```
+
 ### Despliegue en el servidor del CIFP
 
 ```bash
@@ -60,6 +69,7 @@ Servidor: `https://myappsserver.duckdns.org/TonyConverter/`
 
 Todo se sirve desde nuestro propio dominio, sin llamadas a servicios externos:
 
+- [LibreOffice](https://www.libreoffice.org) — DOCX a PDF/RTF en el servidor (MPL 2.0)
 - [FFmpeg](https://ffmpeg.org) vía [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) — audio y vídeo (GPL; código fuente en sus repositorios)
 - [PDF.js](https://github.com/mozilla/pdf.js) — lectura de PDF (Apache 2.0)
 - [pdf-lib](https://github.com/Hopding/pdf-lib) — creación de PDF (MIT)

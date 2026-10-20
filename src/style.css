@@ -154,6 +154,7 @@ body {
 .item-icon { font-size: 1.6rem; }
 .item-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-meta { font-size: 0.85rem; color: var(--muted); }
+.item-note { font-size: 0.8rem; color: var(--blue); margin-top: 2px; }
 .item.done .item-meta { color: var(--ok); }
 .item.error .item-meta { color: var(--err); }
 .arrow { color: var(--orange); font-weight: 700; font-size: 1.2rem; }

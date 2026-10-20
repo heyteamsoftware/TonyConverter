@@ -19,6 +19,17 @@ const CSP = [
 export default defineConfig({
   // Rutas relativas: la web funciona en cualquier carpeta (p. ej. /TonyConverter/)
   base: './',
+  // En desarrollo, el conversor de Word usa el del servidor real
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://myappsserver.duckdns.org',
+        changeOrigin: true,
+        rewrite: (p) => '/TonyConverter' + p,
+        headers: { origin: '' },
+      },
+    },
+  },
   optimizeDeps: {
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
   },

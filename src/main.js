@@ -3,6 +3,7 @@ import '@fontsource/fredoka/600.css';
 import './style.css';
 import { LIMITS, INPUTS, FAMILY, OUTPUT_LABEL, ACCEPT_ATTR, detectInput, sniff, baseName } from './formats.js';
 import { convert } from './converters/index.js';
+import { usesServer } from './converters/server.js';
 import { LEGAL } from './legal.js';
 
 const $ = (s) => document.querySelector(s);
@@ -148,6 +149,12 @@ function row(it) {
     : it.status === 'error' ? it.msg
     : `${it.kind.toUpperCase()} · ${fmtBytes(it.file.size)}`;
   info.append(name, meta);
+  if (it.status === 'idle' && usesServer(it.kind, it.to)) {
+    const note = document.createElement('div');
+    note.className = 'item-note';
+    note.textContent = '☁️ Para respetar la maquetación se convierte en nuestro servidor y se borra al instante.';
+    info.append(note);
+  }
   if (it.status === 'working') {
     const bar = document.createElement('div');
     bar.className = 'bar';
