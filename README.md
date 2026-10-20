@@ -2,7 +2,7 @@
 
 Convertidor de archivos web que funciona **en el navegador**: los archivos no se suben a ningún sitio. La única excepción es **DOCX → PDF/RTF**, que se hace con LibreOffice en nuestro propio servidor para conservar la maquetación (en RAM y borrado al instante).
 
-![Cabecera](public/cabecera.webp)
+![Cabecera](public/cabecera.jpg)
 
 ## Formatos
 
