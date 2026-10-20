@@ -1,1 +1,1 @@
-www-data ALL=(lo-convert) NOPASSWD: /usr/local/bin/gallardito-soffice
+www-data ALL=(lo-convert) NOPASSWD: /usr/local/bin/gallardito-convert

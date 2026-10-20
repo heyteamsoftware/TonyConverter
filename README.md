@@ -1,6 +1,6 @@
 # Gallardito Converter
 
-Convertidor de archivos web que funciona **en el navegador**: los archivos no se suben a ningún sitio. La única excepción es **DOCX → PDF/RTF**, que se hace con LibreOffice en nuestro propio servidor para conservar la maquetación (en RAM y borrado al instante).
+Convertidor de archivos web que funciona **en el navegador**: los archivos no se suben a ningún sitio. Las excepciones son **DOCX → PDF/RTF** (LibreOffice) y **PDF → DOCX** (pdf2docx), que se hacen en nuestro propio servidor para conservar la maquetación (en RAM y borrado al instante).
 
 ![Cabecera](public/cabecera.jpg)
 
@@ -32,7 +32,7 @@ El archivo convertido se descarga con el mismo nombre y la nueva extensión. Si 
 ## Privacidad y legalidad (España)
 
 - Casi todo se convierte en el dispositivo del usuario.
-- DOCX → PDF/RTF: `public/api/convert.php` recibe el documento directamente en `/dev/shm` (RAM), lanza LibreOffice con un perfil temporal sin macros ni enlaces externos, devuelve el resultado y lo borra todo, también si falla. Una conversión a la vez, máximo 90 s.
+- DOCX → PDF/RTF y PDF → DOCX: `public/api/convert.php` recibe el documento directamente en `/dev/shm` (RAM), lanza el conversor como un usuario sin acceso a la red, con perfil temporal sin macros ni enlaces externos, devuelve el resultado y lo borra todo, también si falla. Una conversión a la vez; PDF → DOCX admite hasta 60 páginas.
 - La página lleva una política de seguridad (CSP) con `connect-src 'self'`: el navegador bloquea cualquier envío de datos a otros dominios.
 - Sin cookies, sin analítica y sin recursos de terceros (las tipografías van incluidas).
 - El aviso legal, la política de privacidad y la de cookies están en `src/legal.js`. **Hay que rellenar los campos `[COMPLETAR]`** con los datos del titular (LSSI-CE art. 10).
@@ -50,9 +50,9 @@ La carpeta `dist/` se puede copiar a cualquier servidor web estático y funciona
 
 ### Requisitos del servidor
 
-Apache con PHP 8. La conversión DOCX → PDF/RTF necesita LibreOffice; la carpeta `server/` contiene todo lo necesario:
+Apache con PHP 8. Las conversiones en el servidor necesitan LibreOffice y pdf2docx; la carpeta `server/` contiene todo lo necesario:
 
-- `gallardito-soffice`: lanza LibreOffice como el usuario `lo-convert`, que **no tiene acceso a la red**, con perfil y temporales en RAM.
+- `gallardito-convert`: lanza LibreOffice o pdf2docx (`pdf2docx_run.py`) como el usuario `lo-convert`, que **no tiene acceso a la red**, con perfil y temporales en RAM.
 - `sudoers-gallardito`: Apache (`www-data`) solo puede ejecutar ese script, y solo como `lo-convert`.
 - `tmpfiles-gallardito.conf`: crea `/dev/shm/gallardito` en cada arranque.
 - `instalar.sh`: lo instala todo (`sudo bash server/instalar.sh`).
@@ -71,6 +71,7 @@ Servidor: `https://myappsserver.duckdns.org/TonyConverter/`
 Todo se sirve desde nuestro propio dominio, sin llamadas a servicios externos:
 
 - [LibreOffice](https://www.libreoffice.org) — DOCX a PDF/RTF en el servidor (MPL 2.0)
+- [pdf2docx](https://github.com/ArtifexSoftware/pdf2docx) y [PyMuPDF](https://github.com/pymupdf/PyMuPDF) — PDF a DOCX en el servidor (AGPL 3.0; el código de esta app es público)
 - [FFmpeg](https://ffmpeg.org) vía [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) — audio y vídeo (GPL; código fuente en sus repositorios)
 - [PDF.js](https://github.com/mozilla/pdf.js) — lectura de PDF (Apache 2.0)
 - [pdf-lib](https://github.com/Hopding/pdf-lib) — creación de PDF (MIT)

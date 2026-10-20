@@ -1,0 +1,40 @@
+#!/bin/bash
+# Gallardito Converter: conversiones en el servidor.
+#   DOCX -> PDF / RTF con LibreOffice
+#   PDF  -> DOCX      con pdf2docx
+#
+# Se ejecuta como el usuario lo-convert, que no tiene acceso a la red.
+# Uso: gallardito-convert /dev/shm/gallardito/<id> <origen> <destino>
+# El perfil y los temporales están en <id>/profile y se borran al terminar.
+set -euo pipefail
+
+JOB="${1:-}"; FROM="${2:-}"; TO="${3:-}"
+[[ "$JOB" =~ ^/dev/shm/gallardito/[a-f0-9]{32}$ ]] || exit 2
+[[ -d "$JOB" && ! -L "$JOB" && -d "$JOB/out" && ! -L "$JOB/out" ]] || exit 2
+[[ "$FROM" =~ ^(docx|pdf)$ ]] || exit 2
+IN="$JOB/in.$FROM"
+[[ -f "$IN" && ! -L "$IN" ]] || exit 2
+
+PROFILE="$JOB/profile"
+trap 'rm -rf "$PROFILE"' EXIT
+umask 0002
+mkdir -p "$PROFILE/tmp"
+export HOME="$PROFILE" TMPDIR="$PROFILE/tmp" LANG=es_ES.UTF-8 PATH=/usr/bin:/bin
+cd "$PROFILE"
+
+case "$FROM:$TO" in
+  docx:pdf) FILTER='pdf:writer_pdf_Export' ;;
+  docx:rtf) FILTER='rtf:Rich Text Format' ;;
+  pdf:docx)
+    # 60 páginas como máximo, 150 segundos como máximo
+    # (sin exec, para que el trap borre el perfil al terminar)
+    timeout -k 5 150 /opt/gallardito/venv/bin/python -I /opt/gallardito/pdf2docx_run.py \
+      "$IN" "$JOB/out/in.docx" 60 >/dev/null 2>&1
+    exit 0
+    ;;
+  *) exit 2 ;;
+esac
+
+timeout -k 5 90 /usr/bin/soffice "-env:UserInstallation=file://$PROFILE" \
+  --headless --invisible --norestore --nolockcheck --nodefault --nologo \
+  --convert-to "$FILTER" --outdir "$JOB/out" "$IN" >/dev/null 2>&1

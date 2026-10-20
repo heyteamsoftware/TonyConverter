@@ -1,5 +1,7 @@
 <?php
-// Gallardito Converter — DOCX → PDF / RTF con LibreOffice.
+// Gallardito Converter — conversiones en el servidor:
+//   DOCX → PDF / RTF con LibreOffice
+//   PDF  → DOCX      con pdf2docx
 //
 // Privacidad: el documento se escribe solo en RAM (/dev/shm), se convierte y
 // todo se borra al terminar la petición, también si algo falla. No se guarda
@@ -9,13 +11,14 @@ declare(strict_types=1);
 
 const MAX_BYTES = 50 * 1024 * 1024;
 const BASE = '/dev/shm/gallardito';
-// LibreOffice se ejecuta como el usuario lo-convert, que no tiene acceso a la red
-const RUNNER = '/usr/local/bin/gallardito-soffice';
-const TIMEOUT = 90;      // segundos máximos de conversión
+// Los conversores se ejecutan como el usuario lo-convert, que no tiene acceso a la red
+const RUNNER = '/usr/local/bin/gallardito-convert';
+const TIMEOUT = 160;     // segundos máximos de conversión
 const QUEUE_WAIT = 60;   // segundos máximos esperando turno
-const FORMATS = [
-    'pdf' => 'application/pdf',
-    'rtf' => 'application/rtf',
+// origen => [destino => tipo MIME]
+const CONVERSIONS = [
+    'docx' => ['pdf' => 'application/pdf', 'rtf' => 'application/rtf'],
+    'pdf' => ['docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
 ];
 
 header('X-Content-Type-Options: nosniff');
@@ -86,8 +89,9 @@ if ($origin !== '' && parse_url($origin, PHP_URL_HOST) !== ($_SERVER['HTTP_HOST'
     fail(403, 'Origen no permitido.');
 }
 
+$from = $_GET['from'] ?? 'docx';
 $to = $_GET['to'] ?? '';
-if (!isset(FORMATS[$to])) fail(400, 'Formato de salida no soportado.');
+if (!is_string($from) || !is_string($to) || !isset(CONVERSIONS[$from][$to])) fail(400, 'Conversión no soportada.');
 
 $len = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
 if ($len <= 0) fail(400, 'El archivo está vacío.');
@@ -109,16 +113,17 @@ register_shutdown_function(static fn() => rrmdir($job));
 /* ---------- Recibir el archivo directamente en RAM ---------- */
 
 $in = fopen('php://input', 'rb');
-$out = fopen("$job/in.docx", 'xb');
+$out = fopen("$job/in.$from", 'xb');
 $copied = stream_copy_to_stream($in, $out, MAX_BYTES + 1);
 fclose($out);
 fclose($in);
 if ($copied !== $len || $copied > MAX_BYTES) fail(400, 'El archivo no ha llegado completo.');
 
-$fh = fopen("$job/in.docx", 'rb');
-$magic = fread($fh, 4);
+$fh = fopen("$job/in.$from", 'rb');
+$head = (string)fread($fh, 1024);
 fclose($fh);
-if ($magic !== "PK\x03\x04") fail(415, 'El archivo no es un DOCX válido.');
+$valid = $from === 'pdf' ? str_contains($head, '%PDF') : str_starts_with($head, "PK\x03\x04");
+if (!$valid) fail(415, 'El archivo no es un ' . strtoupper($from) . ' válido.');
 
 /* ---------- Esperar turno (una conversión a la vez) ---------- */
 
@@ -135,8 +140,8 @@ $profile = "$job/profile";
 writeProfile($profile);
 mkdir("$job/out", 0770);
 
-$mime = FORMATS[$to];
-$cmd = ['/usr/bin/sudo', '-n', '-u', 'lo-convert', RUNNER, $job, $to];
+$mime = CONVERSIONS[$from][$to];
+$cmd = ['/usr/bin/sudo', '-n', '-u', 'lo-convert', RUNNER, $job, $from, $to];
 $proc = proc_open($cmd, [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $job, ['PATH' => '/usr/bin:/bin']);
 if (!is_resource($proc)) fail(500, 'No se ha podido iniciar la conversión.');
 $code = proc_close($proc);
@@ -146,9 +151,14 @@ fclose($lock);
 
 $result = "$job/out/in.$to";
 if (!is_file($result) || filesize($result) === 0) {
-    fail($code === 124 ? 504 : 422, $code === 124
-        ? 'El documento ha tardado demasiado en convertirse.'
-        : 'No se ha podido convertir el documento. Puede que esté dañado o protegido con contraseña.');
+    [$status, $msg] = match ($code) {
+        124 => [504, 'El documento ha tardado demasiado en convertirse.'],
+        3 => [422, 'El PDF está protegido con contraseña.'],
+        4 => [413, 'El PDF tiene más de 60 páginas, el máximo para pasarlo a Word.'],
+        5 => [422, 'Este PDF no contiene texto (parece escaneado), así que no se puede pasar a Word.'],
+        default => [422, 'No se ha podido convertir el documento. Puede que esté dañado o protegido con contraseña.'],
+    };
+    fail($status, $msg);
 }
 
 /* ---------- Enviar y borrar ---------- */

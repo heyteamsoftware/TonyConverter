@@ -1,9 +1,11 @@
-// Conversión en nuestro propio servidor (LibreOffice) para los documentos de
-// Word que deben conservar la maquetación exacta. El servidor lo procesa en
-// memoria y lo borra al terminar.
+// Conversiones en nuestro propio servidor, para conservar la maquetación:
+//   DOCX → PDF / RTF con LibreOffice
+//   PDF  → DOCX      con pdf2docx
+// El servidor lo procesa en memoria y lo borra al terminar.
 
 export const SERVER_CONVERSIONS = {
   docx: ['pdf', 'rtf'],
+  pdf: ['docx'],
 };
 
 export const usesServer = (from, to) => SERVER_CONVERSIONS[from]?.includes(to) ?? false;
@@ -11,9 +13,9 @@ export const usesServer = (from, to) => SERVER_CONVERSIONS[from]?.includes(to) ?
 export function convertOnServer(file, from, to, { onProgress, onStatus }) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `api/convert.php?to=${encodeURIComponent(to)}`);
+    xhr.open('POST', `api/convert.php?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
     xhr.responseType = 'blob';
-    xhr.timeout = 240_000;
+    xhr.timeout = 300_000;
     xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 
     onStatus?.('Enviando al conversor…');

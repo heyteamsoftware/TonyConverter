@@ -101,7 +101,7 @@ export async function convertDocument(file, from, to, { base, onProgress }) {
       const blocks = await pdfToBlocks(doc, onProgress);
       if (to === 'txt') return blocksToText(blocks.filter((b) => b.type !== 'page')).replace(/\n\n/g, '\n');
       if (to === 'html') return blocksToHtml(base, blocks);
-      if (to === 'docx') return blocksToDocx(blocks, base);
+      // PDF → DOCX se hace en el servidor (ver server.js)
     } finally {
       await doc.destroy();
     }
