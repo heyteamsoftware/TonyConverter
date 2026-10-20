@@ -50,11 +50,12 @@ La carpeta `dist/` se puede copiar a cualquier servidor web estático y funciona
 
 ### Requisitos del servidor
 
-Apache con PHP 8 y LibreOffice sin interfaz, más fuentes compatibles con las de Office:
+Apache con PHP 8. La conversión DOCX → PDF/RTF necesita LibreOffice; la carpeta `server/` contiene todo lo necesario:
 
-```bash
-sudo apt install --no-install-recommends libreoffice-writer-nogui fonts-crosextra-carlito fonts-crosextra-caladea fonts-liberation fonts-dejavu fonts-noto-core
-```
+- `gallardito-soffice`: lanza LibreOffice como el usuario `lo-convert`, que **no tiene acceso a la red**, con perfil y temporales en RAM.
+- `sudoers-gallardito`: Apache (`www-data`) solo puede ejecutar ese script, y solo como `lo-convert`.
+- `tmpfiles-gallardito.conf`: crea `/dev/shm/gallardito` en cada arranque.
+- `instalar.sh`: lo instala todo (`sudo bash server/instalar.sh`).
 
 ### Despliegue en el servidor del CIFP
 
