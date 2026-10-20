@@ -1,0 +1,4 @@
+server/* text eol=lf
+*.sh text eol=lf
+*.php text eol=lf
+.htaccess text eol=lf
