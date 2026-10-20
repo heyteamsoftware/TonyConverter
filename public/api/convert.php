@@ -9,12 +9,13 @@ declare(strict_types=1);
 
 const MAX_BYTES = 50 * 1024 * 1024;
 const BASE = '/dev/shm/gallardito';
-const SOFFICE = '/usr/bin/soffice';
+// LibreOffice se ejecuta como el usuario lo-convert, que no tiene acceso a la red
+const RUNNER = '/usr/local/bin/gallardito-soffice';
 const TIMEOUT = 90;      // segundos máximos de conversión
 const QUEUE_WAIT = 60;   // segundos máximos esperando turno
 const FORMATS = [
-    'pdf' => ['pdf:writer_pdf_Export', 'application/pdf'],
-    'rtf' => ['rtf:Rich Text Format', 'application/rtf'],
+    'pdf' => 'application/pdf',
+    'rtf' => 'application/rtf',
 ];
 
 header('X-Content-Type-Options: nosniff');
@@ -71,7 +72,7 @@ function writeProfile(string $profile): void
         $xml .= "<item oor:path=\"$path\"><prop oor:name=\"$prop\" oor:op=\"fuse\"><value>$value</value></prop></item>\n";
     }
     $xml .= "</oor:items>\n";
-    mkdir("$profile/user", 0700, true);
+    mkdir("$profile/user", 0770, true);
     file_put_contents("$profile/user/registrymodifications.xcu", $xml);
 }
 
@@ -93,15 +94,16 @@ if ($len <= 0) fail(400, 'El archivo está vacío.');
 if ($len > MAX_BYTES) fail(413, 'El archivo supera los 50 MB.');
 
 if (!is_dir(BASE) && !@mkdir(BASE, 0700) && !is_dir(BASE)) fail(503, 'Servicio no disponible.');
-if (!is_executable(SOFFICE)) fail(503, 'Servicio no disponible.');
+if (!is_executable(RUNNER)) fail(503, 'Servicio no disponible.');
 
 ignore_user_abort(true); // aunque el usuario cierre la página, se limpia todo
 set_time_limit(TIMEOUT + QUEUE_WAIT + 30);
-umask(0077);
+// Carpetas compartidas solo con el grupo lo-convert (heredado de la carpeta base)
+umask(0007);
 sweep();
 
 $job = BASE . '/' . bin2hex(random_bytes(16));
-mkdir($job, 0700);
+mkdir($job, 0770);
 register_shutdown_function(static fn() => rrmdir($job));
 
 /* ---------- Recibir el archivo directamente en RAM ---------- */
@@ -131,17 +133,11 @@ while (!flock($lock, LOCK_EX | LOCK_NB)) {
 
 $profile = "$job/profile";
 writeProfile($profile);
-mkdir("$job/out", 0700);
+mkdir("$job/out", 0770);
 
-[$filter, $mime] = FORMATS[$to];
-$cmd = [
-    '/usr/bin/timeout', '-k', '5', (string)TIMEOUT, SOFFICE,
-    "-env:UserInstallation=file://$profile",
-    '--headless', '--invisible', '--norestore', '--nolockcheck', '--nodefault', '--nologo',
-    '--convert-to', $filter, '--outdir', "$job/out", "$job/in.docx",
-];
-$env = ['HOME' => $profile, 'PATH' => '/usr/bin:/bin', 'LANG' => 'es_ES.UTF-8', 'TMPDIR' => $job];
-$proc = proc_open($cmd, [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $job, $env);
+$mime = FORMATS[$to];
+$cmd = ['/usr/bin/sudo', '-n', '-u', 'lo-convert', RUNNER, $job, $to];
+$proc = proc_open($cmd, [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, $job, ['PATH' => '/usr/bin:/bin']);
 if (!is_resource($proc)) fail(500, 'No se ha podido iniciar la conversión.');
 $code = proc_close($proc);
 

@@ -2,16 +2,19 @@
 // Los campos marcados como [COMPLETAR] deben rellenarse con los datos reales del titular.
 const T = (s) => `<span class="todo">[COMPLETAR: ${s}]</span>`;
 
+const EMAIL = '<a href="mailto:secretaria-35015887@gobiernodecanarias.org">secretaria-35015887@gobiernodecanarias.org</a>';
+
 export const LEGAL = {
   aviso: `
 <h2>Aviso legal</h2>
 <p>En cumplimiento del artículo 10 de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se informa de los datos del titular de este sitio web:</p>
 <ul>
-  <li><strong>Titular:</strong> ${T('nombre o razón social')}</li>
-  <li><strong>NIF/CIF:</strong> ${T('NIF/CIF')}</li>
-  <li><strong>Domicilio:</strong> ${T('dirección postal')}</li>
-  <li><strong>Correo de contacto:</strong> ${T('email')}</li>
-  <li><strong>Datos registrales:</strong> ${T('solo si es sociedad: Registro Mercantil, tomo, folio, hoja')}</li>
+  <li><strong>Titular:</strong> CIFP Tony Gallardo, centro público de Formación Profesional dependiente de la Consejería competente en materia de educación del Gobierno de Canarias.</li>
+  <li><strong>NIF:</strong> ${T('NIF del centro')}</li>
+  <li><strong>Domicilio:</strong> Ctra. de las Coloradas, 35009 Las Palmas de Gran Canaria (Las Palmas), España.</li>
+  <li><strong>Teléfono:</strong> <a href="tel:+34928796292">+34 928 79 62 92</a></li>
+  <li><strong>Correo de contacto:</strong> ${EMAIL}</li>
+  <li><strong>Web del centro:</strong> <a href="https://www3.gobiernodecanarias.org/medusa/edublog/cifptonygallardo/" rel="noopener" target="_blank">www3.gobiernodecanarias.org/medusa/edublog/cifptonygallardo</a></li>
 </ul>
 <h3>Funcionamiento del servicio</h3>
 <p>Gallardito Converter es una herramienta gratuita que convierte archivos <strong>directamente en el navegador del usuario</strong>. La única excepción son los documentos de Word (DOCX) que se convierten a PDF o RTF: para conservar su maquetación se procesan en nuestro propio servidor y se borran en cuanto termina la conversión. Nunca se envían archivos a servidores de terceros.</p>
@@ -42,15 +45,15 @@ export const LEGAL = {
 <h3>Datos técnicos de conexión</h3>
 <p>Como en cualquier web, el servidor que entrega la página puede registrar de forma automática datos técnicos de la visita (dirección IP, fecha y hora, navegador) con fines exclusivamente de seguridad y funcionamiento.</p>
 <ul>
-  <li><strong>Responsable:</strong> ${T('nombre o razón social y email')}</li>
+  <li><strong>Responsable:</strong> CIFP Tony Gallardo, Ctra. de las Coloradas, 35009 Las Palmas de Gran Canaria. Correo: ${EMAIL}.</li>
   <li><strong>Finalidad:</strong> servir la web y protegerla frente a abusos.</li>
   <li><strong>Base jurídica:</strong> interés legítimo (art. 6.1.f RGPD).</li>
-  <li><strong>Conservación:</strong> ${T('plazo de los registros del hosting, p. ej. 30 días')}.</li>
-  <li><strong>Encargado del tratamiento:</strong> ${T('proveedor de hosting y país')}.</li>
+  <li><strong>Conservación:</strong> 14 días; después se borran automáticamente.</li>
+  <li><strong>Alojamiento:</strong> Oracle Cloud Infrastructure, en un centro de datos de Marsella (Francia), dentro de la Unión Europea. No hay transferencias internacionales de datos.</li>
   <li><strong>Cesiones:</strong> no se ceden datos a terceros salvo obligación legal.</li>
 </ul>
 <h3>Tus derechos</h3>
-<p>Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a ${T('email')}. Si consideras que no se han respetado, puedes reclamar ante la Agencia Española de Protección de Datos (www.aepd.es).</p>
+<p>Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a ${EMAIL} o por correo postal a la dirección del centro. Si consideras que no se han respetado, puedes reclamar ante la Agencia Española de Protección de Datos (www.aepd.es).</p>
 `,
   cookies: `
 <h2>Cookies</h2>
