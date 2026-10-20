@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Gallardito Converter</title>
+    <meta name="description" content="Convierte imágenes, documentos, hojas de cálculo, audio y vídeo gratis. Tus archivos nunca salen de tu dispositivo." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="hero">
+      <img src="/cabecera.webp" alt="Gallardito Converter: convierte cualquier archivo fácilmente" width="1024" height="434" />
+    </header>
+
+    <main class="wrap">
+      <p class="privacy-pill">
+        <span aria-hidden="true">🔒</span>
+        Tus archivos <strong>no salen de tu dispositivo</strong>: todo se convierte en tu navegador. No subimos ni guardamos nada.
+      </p>
+
+      <section id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Elegir archivos para convertir">
+        <input id="fileInput" type="file" multiple hidden />
+        <div class="dz-icon" aria-hidden="true">📂</div>
+        <p class="dz-title">Arrastra aquí tus archivos</p>
+        <p class="dz-sub">o <span class="link">haz clic para elegirlos</span></p>
+        <p class="dz-limits" id="limits"></p>
+      </section>
+
+      <div id="toast" class="toast" role="alert" hidden></div>
+
+      <section id="queue" class="queue" hidden>
+        <div class="queue-head">
+          <h2>Tus archivos</h2>
+          <div class="bulk" id="bulk" hidden>
+            <label for="bulkSelect">Convertir todos a</label>
+            <select id="bulkSelect"></select>
+          </div>
+        </div>
+        <ul id="list" class="list"></ul>
+        <div class="actions">
+          <label class="check"><input type="checkbox" id="zipAll" /> Descargar todo en un ZIP</label>
+          <div class="btns">
+            <button id="clearBtn" class="btn ghost" type="button">Vaciar</button>
+            <button id="convertAll" class="btn primary" type="button">Convertir todo</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="formats">
+        <h2>¿Qué puedo convertir?</h2>
+        <div id="formatsGrid" class="formats-grid"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <nav>
+        <button type="button" data-legal="aviso">Aviso legal</button>
+        <button type="button" data-legal="privacidad">Privacidad</button>
+        <button type="button" data-legal="cookies">Cookies</button>
+      </nav>
+      <p>Gallardito Converter · Sin registros, sin cookies, sin subir archivos.</p>
+    </footer>
+
+    <dialog id="legalDialog" class="legal">
+      <form method="dialog"><button class="close" aria-label="Cerrar">✕</button></form>
+      <div id="legalBody"></div>
+    </dialog>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
