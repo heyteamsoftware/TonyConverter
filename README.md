@@ -35,7 +35,7 @@ El archivo convertido se descarga con el mismo nombre y la nueva extensión. Si 
 - DOCX → PDF/RTF y PDF → DOCX: `public/api/convert.php` recibe el documento directamente en `/dev/shm` (RAM), lanza el conversor como un usuario sin acceso a la red, con perfil temporal sin macros ni enlaces externos, devuelve el resultado y lo borra todo, también si falla. Una conversión a la vez; PDF → DOCX admite hasta 60 páginas.
 - La página lleva una política de seguridad (CSP) con `connect-src 'self'`: el navegador bloquea cualquier envío de datos a otros dominios.
 - Sin cookies, sin analítica y sin recursos de terceros (las tipografías van incluidas).
-- El aviso legal, la política de privacidad y la de cookies están en `src/legal.js`. **Hay que rellenar los campos `[COMPLETAR]`** con los datos del titular (LSSI-CE art. 10).
+- El aviso legal, la política de privacidad y la de cookies están en `src/legal.js`, con los datos del CIFP Tony Gallardo (LSSI-CE art. 10).
 
 ## Desarrollo
 

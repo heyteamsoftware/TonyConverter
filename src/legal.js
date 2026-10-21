@@ -10,7 +10,6 @@ export const LEGAL = {
 <p>En cumplimiento del artículo 10 de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se informa de los datos del titular de este sitio web:</p>
 <ul>
   <li><strong>Titular:</strong> CIFP Tony Gallardo, centro público de Formación Profesional dependiente de la Consejería competente en materia de educación del Gobierno de Canarias.</li>
-  <li><strong>NIF:</strong> ${T('NIF del centro')}</li>
   <li><strong>Domicilio:</strong> Ctra. de las Coloradas, 35009 Las Palmas de Gran Canaria (Las Palmas), España.</li>
   <li><strong>Teléfono:</strong> <a href="tel:+34928796292">+34 928 79 62 92</a></li>
   <li><strong>Correo de contacto:</strong> ${EMAIL}</li>
