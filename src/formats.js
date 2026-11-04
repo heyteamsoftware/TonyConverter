@@ -24,8 +24,8 @@ export const INPUTS = {
   png: { family: 'image', exts: ['png'], outputs: ['jpg', 'webp', 'gif', 'bmp', 'pdf'] },
   webp: { family: 'image', exts: ['webp'], outputs: ['jpg', 'png', 'gif', 'bmp', 'pdf'] },
   gif: { family: 'image', exts: ['gif'], outputs: ['jpg', 'png', 'webp', 'bmp', 'pdf'] },
-  // pdfmin = "aplastar PDF": el mismo PDF, más ligero
-  pdf: { family: 'document', exts: ['pdf'], outputs: ['docx', 'txt', 'html', 'jpg', 'png', 'pdfmin'] },
+  // Los PDF tienen además el botón «Aplastar» (salida interna «pdfmin»)
+  pdf: { family: 'document', exts: ['pdf'], outputs: ['docx', 'txt', 'html', 'jpg', 'png'] },
   docx: { family: 'document', exts: ['docx'], outputs: ['pdf', 'txt', 'html', 'md', 'rtf'] },
   txt: { family: 'document', exts: ['txt', 'text', 'log'], outputs: ['pdf', 'docx', 'html', 'md', 'rtf'] },
   xlsx: { family: 'sheet', exts: ['xlsx', 'xls'], outputs: ['csv', 'ods', 'json', 'html', 'pdf'] },

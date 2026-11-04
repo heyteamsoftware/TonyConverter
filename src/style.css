@@ -158,9 +158,15 @@ body {
 .item.done .item-meta { color: var(--ok); }
 .item.error .item-meta { color: var(--err); }
 .arrow { color: var(--orange); font-weight: 700; font-size: 1.2rem; }
-.item-btns { display: flex; gap: 6px; }
-.item-selects { display: flex; flex-direction: column; gap: 6px; }
-.item-selects select { max-width: 220px; }
+/* Acciones: cada fila es «selector | botón» (Convertir; en PDF también Aplastar) */
+.item-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 170px) auto;
+  gap: 6px;
+  align-items: center;
+}
+.item-actions select { max-width: none; width: 100%; }
+.item-actions .btn { width: 100%; }
 
 select {
   font: inherit;
@@ -224,6 +230,8 @@ select {
 .btn.primary { background: var(--orange); color: #fff; }
 .btn.primary:hover:not(:disabled) { background: var(--orange-dark); }
 .btn.success { background: var(--ok); color: #fff; }
+.btn.secondary { background: var(--blue); color: #fff; }
+.btn.secondary:hover:not(:disabled) { background: var(--blue-dark); }
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .btn.small { padding: 7px 12px; font-size: 0.9rem; }
 .btn.icon { background: transparent; color: var(--muted); border: 1px solid var(--line); }
@@ -297,14 +305,13 @@ select {
   .dz-title { font-size: 1.3rem; }
   .item {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'icon info btns' 'icon sel sel';
+    grid-template-areas: 'icon info del' 'icon actions actions';
   }
   .item-icon { grid-area: icon; align-self: start; }
   .item-info { grid-area: info; }
   .arrow { display: none; }
-  .item-selects { grid-area: sel; }
-  .item-selects select { max-width: none; width: 100%; }
-  .item-btns { grid-area: btns; }
+  .item > .btn.icon { grid-area: del; align-self: start; }
+  .item-actions { grid-area: actions; grid-template-columns: minmax(0, 1fr) auto; }
   .actions .btns { width: 100%; }
   .actions .btns .btn { flex: 1; }
 }

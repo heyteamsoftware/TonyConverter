@@ -64,7 +64,7 @@ async function addFiles(fileList) {
       continue;
     }
     total += file.size;
-    items.push({ id: nextId++, file, kind, to: INPUTS[kind].outputs[0], level: 'medio', status: 'idle', progress: 0, msg: '', result: null });
+    items.push({ id: nextId++, file, kind, to: INPUTS[kind].outputs[0], op: 'convert', level: 'medio', status: 'idle', progress: 0, msg: '', result: null });
   }
   if (problems.length) toast([...new Set(problems)].join(' '));
   render();
@@ -146,18 +146,24 @@ function row(it) {
   meta.className = 'item-meta';
   meta.textContent =
     it.status === 'working' ? it.msg || 'Convirtiendo…'
-    : it.status === 'done' && it.to === 'pdfmin' ? `Listo · ${fmtBytes(it.file.size)} → ${fmtBytes(it.result.blob.size)} (−${Math.round((1 - it.result.blob.size / it.file.size) * 100)} %)`
+    : it.status === 'done' && it.op === 'squash' ? `Aplastado · ${fmtBytes(it.file.size)} → ${fmtBytes(it.result.blob.size)} (−${Math.round((1 - it.result.blob.size / it.file.size) * 100)} %)`
     : it.status === 'done' ? `Listo · ${outName(it)} · ${fmtBytes(it.result.blob.size)}`
     : it.status === 'error' ? it.msg
     : `${it.kind.toUpperCase()} · ${fmtBytes(it.file.size)}`;
   info.append(name, meta);
-  if (it.status === 'idle' && usesServer(it.kind, it.to)) {
-    const note = document.createElement('div');
-    note.className = 'item-note';
-    note.textContent = it.to === 'pdfmin'
-      ? `${PDF_LEVELS.find((l) => l.value === it.level).label}: ${PDF_LEVELS.find((l) => l.value === it.level).hint}. ☁️ Se reduce en nuestro servidor, se borra al instante y se descarga como «-reducido.pdf».`
-      : '☁️ Para respetar la maquetación se convierte en nuestro servidor y se borra al instante.';
-    info.append(note);
+  if (it.status === 'idle') {
+    const notes = [];
+    if (usesServer(it.kind, it.to)) notes.push(`☁️ A ${OUTPUT_LABEL[it.to]} se convierte en nuestro servidor y se borra al instante.`);
+    if (canSquash(it)) {
+      const l = PDF_LEVELS.find((x) => x.value === it.level);
+      notes.push(`🗜️ Aplastar ${l.label.split(' ')[0].toLowerCase()}: ${l.hint}. Se descarga como «-reducido.pdf».`);
+    }
+    for (const t of notes) {
+      const note = document.createElement('div');
+      note.className = 'item-note';
+      note.textContent = t;
+      info.append(note);
+    }
   }
   if (it.status === 'working') {
     const bar = document.createElement('div');
@@ -181,39 +187,48 @@ function row(it) {
   sel.disabled = busy;
   sel.addEventListener('change', () => {
     it.to = sel.value;
-    resetItem(it);
+    if (it.op === 'convert') resetItem(it);
     render();
   });
 
-  // Al aplastar un PDF se elige también cuánto
-  const selects = document.createElement('div');
-  selects.className = 'item-selects';
-  selects.append(sel);
-  if (it.to === 'pdfmin') {
+  // Botón de una acción: «Descargar» si ya está hecha, «Reintentar» si falló
+  const actionBtn = (op, label, cls) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const mine = it.op === op;
+    const done = mine && it.status === 'done';
+    b.className = 'btn small ' + (done ? 'success' : cls);
+    b.textContent = done ? 'Descargar' : mine && it.status === 'error' ? 'Reintentar' : label;
+    b.disabled = busy;
+    b.addEventListener('click', async () => {
+      if (done) return download(it.result.blob, outName(it));
+      if (!mine) {
+        it.op = op;
+        resetItem(it);
+      }
+      await runBatch([it]);
+    });
+    return b;
+  };
+
+  // Fila 1: formato + Convertir. Fila 2 (solo PDF): nivel + Aplastar
+  const actions = document.createElement('div');
+  actions.className = 'item-actions';
+  actions.append(sel, actionBtn('convert', 'Convertir', 'primary'));
+  if (canSquash(it)) {
     const lvl = document.createElement('select');
-    lvl.setAttribute('aria-label', `Nivel de reducción para ${it.file.name}`);
+    lvl.setAttribute('aria-label', `Nivel para aplastar ${it.file.name}`);
     for (const l of PDF_LEVELS) lvl.add(new Option(l.label, l.value));
     lvl.value = it.level;
     lvl.disabled = busy;
     lvl.addEventListener('change', () => {
       it.level = lvl.value;
-      resetItem(it);
+      if (it.op === 'squash') resetItem(it);
       render();
     });
-    selects.append(lvl);
+    actions.append(lvl, actionBtn('squash', 'Aplastar', 'secondary'));
   }
 
-  const btns = document.createElement('div');
-  btns.className = 'item-btns';
-  const main = document.createElement('button');
-  main.type = 'button';
-  main.className = 'btn small ' + (it.status === 'done' ? 'success' : 'primary');
-  main.textContent = it.status === 'done' ? 'Descargar' : it.status === 'error' ? 'Reintentar' : 'Convertir';
-  main.disabled = busy;
-  main.addEventListener('click', async () => {
-    if (it.status === 'done') return download(it.result.blob, outName(it));
-    await runBatch([it]);
-  });
   const del = document.createElement('button');
   del.type = 'button';
   del.className = 'btn small icon';
@@ -226,11 +241,12 @@ function row(it) {
     items = items.filter((x) => x !== it);
     render();
   });
-  btns.append(main, del);
-
-  li.append(icon, info, arrow, selects, btns);
+  li.append(icon, info, arrow, actions, del);
   return li;
 }
+
+// Los PDF tienen además la acción «Aplastar»
+const canSquash = (it) => it.kind === 'pdf';
 
 function resetItem(it) {
   it.result = null; // se libera la memoria del resultado
@@ -243,8 +259,9 @@ els.bulkSelect.addEventListener('change', () => {
   const v = els.bulkSelect.value;
   if (!v) return;
   for (const it of items) {
-    if (it.to !== v) {
+    if (it.to !== v || it.op !== 'convert') {
       it.to = v;
+      it.op = 'convert';
       resetItem(it);
     }
   }
@@ -283,7 +300,7 @@ async function convertItem(it) {
     }
   };
   try {
-    it.result = await convert(it.file, it.kind, it.to, {
+    it.result = await convert(it.file, it.kind, it.op === 'squash' ? 'pdfmin' : it.to, {
       base: baseName(it.file.name),
       level: it.level,
       onProgress: (p) => {
@@ -350,7 +367,7 @@ for (const [kind, def] of Object.entries(INPUTS)) {
   const h = document.createElement('h3');
   h.textContent = `${FAMILY[def.family].icon} ${kind.toUpperCase()}`;
   const p = document.createElement('p');
-  p.textContent = def.outputs.map((o) => (o === 'pdfmin' ? OUTPUT_LABEL[o] : o.toUpperCase())).join(' · ');
+  p.textContent = def.outputs.map((o) => o.toUpperCase()).join(' · ') + (kind === 'pdf' ? ' · y Aplastar PDF' : '');
   card.append(h, p);
   grid.append(card);
 }

@@ -67,7 +67,9 @@ async function pdfToImages(doc, to, base, onProgress) {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    // intent 'print': pdf.js no espera a los fotogramas de la pantalla, así
+    // que también funciona si el usuario cambia de pestaña mientras convierte
+    await page.render({ canvasContext: ctx, viewport: vp, intent: 'print' }).promise;
     files.push({ name: n > 1 ? `${base}-${String(p).padStart(String(n).length, '0')}.${to}` : `${base}.${to}`, blob: await canvasToBlob(canvas, type, 0.9) });
     canvas.width = canvas.height = 0;
     page.cleanup();
