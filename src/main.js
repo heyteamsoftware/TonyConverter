@@ -21,7 +21,7 @@ let nextId = 1;
 let busy = false;
 
 els.input.accept = ACCEPT_ATTR;
-$('#limits').textContent = `Hasta ${LIMITS.maxFiles} archivos · ${LIMITS.maxFileBytes / MB} MB cada uno · ${LIMITS.maxTotalBytes / MB} MB en total`;
+$('#limits').textContent = `Hasta ${LIMITS.maxFiles} archivos · ${LIMITS.maxFileBytes / MB} MB cada uno (vídeos ${LIMITS.maxVideoBytes / MB} MB) · ${LIMITS.maxTotalBytes / MB} MB en total`;
 
 /* ---------- Avisos ---------- */
 let toastTimer;
@@ -50,8 +50,9 @@ async function addFiles(fileList) {
       problems.push(`«${file.name}» está vacío.`);
       continue;
     }
-    if (file.size > LIMITS.maxFileBytes) {
-      problems.push(`«${file.name}» pesa ${fmtBytes(file.size)} (máx. ${LIMITS.maxFileBytes / MB} MB).`);
+    const maxBytes = INPUTS[kind].family === 'video' ? LIMITS.maxVideoBytes : LIMITS.maxFileBytes;
+    if (file.size > maxBytes) {
+      problems.push(`«${file.name}» pesa ${fmtBytes(file.size)} (máx. ${maxBytes / MB} MB).`);
       continue;
     }
     if (total + file.size > LIMITS.maxTotalBytes) {

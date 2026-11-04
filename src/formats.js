@@ -3,6 +3,7 @@
 export const LIMITS = {
   maxFiles: 10,
   maxFileBytes: 50 * 1024 * 1024, // 50 MB por archivo
+  maxVideoBytes: 100 * 1024 * 1024, // 100 MB por vídeo
   maxTotalBytes: 200 * 1024 * 1024, // 200 MB por tanda
   maxImagePixels: 50_000_000, // 50 megapíxeles
   maxPdfPagesAsImages: 100,
@@ -30,6 +31,8 @@ export const INPUTS = {
   csv: { family: 'sheet', exts: ['csv', 'tsv'], outputs: ['xlsx', 'ods', 'json', 'html', 'pdf'] },
   mp3: { family: 'audio', exts: ['mp3'], outputs: ['wav', 'ogg', 'm4a', 'flac', 'opus'] },
   mp4: { family: 'video', exts: ['mp4', 'm4v'], outputs: ['webm', 'mov', 'mkv', 'mp3', 'gif'] },
+  // Vídeos de iPhone y cámaras
+  mov: { family: 'video', exts: ['mov', 'qt'], outputs: ['mp4', 'webm', 'mkv', 'mp3', 'gif'] },
 };
 
 export const OUTPUT_LABEL = {
@@ -37,7 +40,7 @@ export const OUTPUT_LABEL = {
   docx: 'DOCX (Word)', txt: 'TXT', html: 'HTML', md: 'Markdown', rtf: 'RTF',
   csv: 'CSV', ods: 'ODS', json: 'JSON', xlsx: 'XLSX (Excel)',
   wav: 'WAV', ogg: 'OGG', m4a: 'M4A (AAC)', flac: 'FLAC', opus: 'OPUS',
-  webm: 'WEBM', mov: 'MOV', mkv: 'MKV', mp3: 'MP3',
+  webm: 'WEBM', mov: 'MOV', mkv: 'MKV', mp3: 'MP3', mp4: 'MP4',
 };
 
 export const MIME = {
@@ -49,7 +52,7 @@ export const MIME = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4', flac: 'audio/flac', opus: 'audio/ogg',
-  webm: 'video/webm', mov: 'video/quicktime', mkv: 'video/x-matroska', mp3: 'audio/mpeg',
+  webm: 'video/webm', mov: 'video/quicktime', mkv: 'video/x-matroska', mp3: 'audio/mpeg', mp4: 'video/mp4',
   zip: 'application/zip',
 };
 
@@ -93,7 +96,9 @@ export async function sniff(file, kind) {
       return head[0] === 0x50 && head[1] === 0x4b;
     }
     case 'mp3': return ascii(0, 3) === 'ID3' || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0);
-    case 'mp4': return ascii(4, 8) === 'ftyp';
+    // MP4 y MOV empiezan por una "caja" con nombre de 4 letras en la posición 4
+    case 'mp4':
+    case 'mov': return ['ftyp', 'moov', 'mdat', 'wide', 'free', 'skip', 'pnot'].includes(ascii(4, 8));
     default: return true; // txt / csv: texto plano
   }
 }

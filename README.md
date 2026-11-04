@@ -19,12 +19,13 @@ Convertidor de archivos web que funciona **en el navegador**: los archivos no se
 | CSV / TSV | XLSX · ODS · JSON · HTML · PDF |
 | MP3 | WAV · OGG · M4A · FLAC · OPUS |
 | MP4 | WEBM · MOV · MKV · MP3 · GIF |
+| MOV | MP4 · WEBM · MKV · MP3 · GIF |
 
 El archivo convertido se descarga con el mismo nombre y la nueva extensión. Si el resultado son varios archivos (un PDF de varias páginas pasado a imágenes, o un Excel con varias hojas pasado a CSV), se descarga un ZIP.
 
 ## Límites
 
-- 10 archivos por tanda, 50 MB por archivo, 200 MB en total.
+- 10 archivos por tanda, 50 MB por archivo (100 MB los vídeos), 200 MB en total.
 - Imágenes de hasta 50 megapíxeles.
 - PDF a imágenes: hasta 100 páginas.
 - Vídeo a GIF: primeros 20 segundos (10 fps, 480 px de ancho).
