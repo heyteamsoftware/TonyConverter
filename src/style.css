@@ -159,6 +159,8 @@ body {
 .item.error .item-meta { color: var(--err); }
 .arrow { color: var(--orange); font-weight: 700; font-size: 1.2rem; }
 .item-btns { display: flex; gap: 6px; }
+.item-selects { display: flex; flex-direction: column; gap: 6px; }
+.item-selects select { max-width: 220px; }
 
 select {
   font: inherit;
@@ -300,7 +302,8 @@ select {
   .item-icon { grid-area: icon; align-self: start; }
   .item-info { grid-area: info; }
   .arrow { display: none; }
-  .item select { grid-area: sel; max-width: none; width: 100%; }
+  .item-selects { grid-area: sel; }
+  .item-selects select { max-width: none; width: 100%; }
   .item-btns { grid-area: btns; }
   .actions .btns { width: 100%; }
   .actions .btns .btn { flex: 1; }

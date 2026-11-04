@@ -16,11 +16,13 @@ export async function convert(file, from, to, opts) {
   const fn = usesServer(from, to) ? convertOnServer : await loaders[INPUTS[from].family]();
   let out = await fn(file, from, to, opts);
   let ext = to;
+  let suffix = '';
   if (out && out.blob instanceof Blob) {
     ext = out.ext;
+    suffix = out.suffix || '';
     out = out.blob;
   }
   const type = MIME[ext] || 'application/octet-stream';
   const blob = out instanceof Blob && out.type === type ? out : new Blob([out], { type });
-  return { blob, ext };
+  return { blob, ext, suffix };
 }

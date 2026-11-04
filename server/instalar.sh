@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 
 apt-get install -y --no-install-recommends libreoffice-writer-nogui \
   fonts-crosextra-carlito fonts-crosextra-caladea fonts-liberation fonts-liberation2 \
-  fonts-dejavu fonts-noto-core fonts-noto-color-emoji fonts-opensymbol python3-venv
+  fonts-dejavu fonts-noto-core fonts-noto-color-emoji fonts-opensymbol python3-venv ghostscript
 
 # pdf2docx en un entorno aparte
 mkdir -p /opt/gallardito

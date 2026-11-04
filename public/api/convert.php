@@ -2,6 +2,7 @@
 // Gallardito Converter — conversiones en el servidor:
 //   DOCX → PDF / RTF con LibreOffice
 //   PDF  → DOCX      con pdf2docx
+//   PDF  → PDF reducido ("aplastar") con Ghostscript
 //
 // Privacidad: el documento se escribe solo en RAM (/dev/shm), se convierte y
 // todo se borra al terminar la petición, también si algo falla. No se guarda
@@ -18,7 +19,13 @@ const QUEUE_WAIT = 60;   // segundos máximos esperando turno
 // origen => [destino => tipo MIME]
 const CONVERSIONS = [
     'docx' => ['pdf' => 'application/pdf', 'rtf' => 'application/rtf'],
-    'pdf' => ['docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    'pdf' => [
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        // aplastar PDF: niveles ligero, medio y máximo
+        'min-ligero' => 'application/pdf',
+        'min-medio' => 'application/pdf',
+        'min-maximo' => 'application/pdf',
+    ],
 ];
 
 header('X-Content-Type-Options: nosniff');
@@ -149,7 +156,8 @@ $code = proc_close($proc);
 flock($lock, LOCK_UN);
 fclose($lock);
 
-$result = "$job/out/in.$to";
+$outExt = str_starts_with($to, 'min-') ? 'pdf' : $to;
+$result = "$job/out/in.$outExt";
 if (!is_file($result) || filesize($result) === 0) {
     [$status, $msg] = match ($code) {
         124 => [504, 'El documento ha tardado demasiado en convertirse.'],
@@ -165,6 +173,13 @@ if (!is_file($result) || filesize($result) === 0) {
 
 header('Content-Type: ' . $mime);
 header('Content-Length: ' . filesize($result));
-header('Content-Disposition: attachment; filename="documento.' . $to . '"');
+// Al aplastar, si no se gana al menos un 2 % no merece la pena
+if ($outExt !== $to && filesize($result) >= $len * 0.98) {
+    fail(422, $to === 'min-maximo'
+        ? 'Este PDF ya está muy optimizado: no se ha podido reducir más.'
+        : 'Con este nivel no se reduce: sus imágenes ya tienen poca resolución. Prueba con un nivel más fuerte.');
+}
+
+header('Content-Disposition: attachment; filename="documento.' . $outExt . '"');
 readfile($result);
 // register_shutdown_function borra la carpeta del trabajo al terminar

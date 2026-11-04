@@ -24,7 +24,8 @@ export const INPUTS = {
   png: { family: 'image', exts: ['png'], outputs: ['jpg', 'webp', 'gif', 'bmp', 'pdf'] },
   webp: { family: 'image', exts: ['webp'], outputs: ['jpg', 'png', 'gif', 'bmp', 'pdf'] },
   gif: { family: 'image', exts: ['gif'], outputs: ['jpg', 'png', 'webp', 'bmp', 'pdf'] },
-  pdf: { family: 'document', exts: ['pdf'], outputs: ['docx', 'txt', 'html', 'jpg', 'png'] },
+  // pdfmin = "aplastar PDF": el mismo PDF, más ligero
+  pdf: { family: 'document', exts: ['pdf'], outputs: ['docx', 'txt', 'html', 'jpg', 'png', 'pdfmin'] },
   docx: { family: 'document', exts: ['docx'], outputs: ['pdf', 'txt', 'html', 'md', 'rtf'] },
   txt: { family: 'document', exts: ['txt', 'text', 'log'], outputs: ['pdf', 'docx', 'html', 'md', 'rtf'] },
   xlsx: { family: 'sheet', exts: ['xlsx', 'xls'], outputs: ['csv', 'ods', 'json', 'html', 'pdf'] },
@@ -41,7 +42,15 @@ export const OUTPUT_LABEL = {
   csv: 'CSV', ods: 'ODS', json: 'JSON', xlsx: 'XLSX (Excel)',
   wav: 'WAV', ogg: 'OGG', m4a: 'M4A (AAC)', flac: 'FLAC', opus: 'OPUS',
   webm: 'WEBM', mov: 'MOV', mkv: 'MKV', mp3: 'MP3', mp4: 'MP4',
+  pdfmin: 'Aplastar PDF',
 };
+
+// Niveles para aplastar un PDF (resolución a la que se dejan las imágenes)
+export const PDF_LEVELS = [
+  { value: 'ligero', label: 'Ligero (300 ppp)', hint: 'buena calidad para imprimir' },
+  { value: 'medio', label: 'Medio (150 ppp)', hint: 'para leer en pantalla o enviar por correo' },
+  { value: 'maximo', label: 'Máximo (72 ppp)', hint: 'lo más pequeño posible; las fotos pierden calidad' },
+];
 
 export const MIME = {
   jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', bmp: 'image/bmp',

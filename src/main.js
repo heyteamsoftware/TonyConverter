@@ -1,7 +1,7 @@
 import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/600.css';
 import './style.css';
-import { LIMITS, INPUTS, FAMILY, OUTPUT_LABEL, ACCEPT_ATTR, detectInput, sniff, baseName } from './formats.js';
+import { LIMITS, INPUTS, FAMILY, OUTPUT_LABEL, PDF_LEVELS, ACCEPT_ATTR, detectInput, sniff, baseName } from './formats.js';
 import { convert } from './converters/index.js';
 import { usesServer } from './converters/server.js';
 import { LEGAL } from './legal.js';
@@ -64,7 +64,7 @@ async function addFiles(fileList) {
       continue;
     }
     total += file.size;
-    items.push({ id: nextId++, file, kind, to: INPUTS[kind].outputs[0], status: 'idle', progress: 0, msg: '', result: null });
+    items.push({ id: nextId++, file, kind, to: INPUTS[kind].outputs[0], level: 'medio', status: 'idle', progress: 0, msg: '', result: null });
   }
   if (problems.length) toast([...new Set(problems)].join(' '));
   render();
@@ -146,14 +146,17 @@ function row(it) {
   meta.className = 'item-meta';
   meta.textContent =
     it.status === 'working' ? it.msg || 'Convirtiendo…'
-    : it.status === 'done' ? `Listo · ${baseName(it.file.name)}.${it.result.ext} · ${fmtBytes(it.result.blob.size)}`
+    : it.status === 'done' && it.to === 'pdfmin' ? `Listo · ${fmtBytes(it.file.size)} → ${fmtBytes(it.result.blob.size)} (−${Math.round((1 - it.result.blob.size / it.file.size) * 100)} %)`
+    : it.status === 'done' ? `Listo · ${outName(it)} · ${fmtBytes(it.result.blob.size)}`
     : it.status === 'error' ? it.msg
     : `${it.kind.toUpperCase()} · ${fmtBytes(it.file.size)}`;
   info.append(name, meta);
   if (it.status === 'idle' && usesServer(it.kind, it.to)) {
     const note = document.createElement('div');
     note.className = 'item-note';
-    note.textContent = '☁️ Para respetar la maquetación se convierte en nuestro servidor y se borra al instante.';
+    note.textContent = it.to === 'pdfmin'
+      ? `${PDF_LEVELS.find((l) => l.value === it.level).label}: ${PDF_LEVELS.find((l) => l.value === it.level).hint}. ☁️ Se reduce en nuestro servidor, se borra al instante y se descarga como «-reducido.pdf».`
+      : '☁️ Para respetar la maquetación se convierte en nuestro servidor y se borra al instante.';
     info.append(note);
   }
   if (it.status === 'working') {
@@ -182,6 +185,24 @@ function row(it) {
     render();
   });
 
+  // Al aplastar un PDF se elige también cuánto
+  const selects = document.createElement('div');
+  selects.className = 'item-selects';
+  selects.append(sel);
+  if (it.to === 'pdfmin') {
+    const lvl = document.createElement('select');
+    lvl.setAttribute('aria-label', `Nivel de reducción para ${it.file.name}`);
+    for (const l of PDF_LEVELS) lvl.add(new Option(l.label, l.value));
+    lvl.value = it.level;
+    lvl.disabled = busy;
+    lvl.addEventListener('change', () => {
+      it.level = lvl.value;
+      resetItem(it);
+      render();
+    });
+    selects.append(lvl);
+  }
+
   const btns = document.createElement('div');
   btns.className = 'item-btns';
   const main = document.createElement('button');
@@ -207,7 +228,7 @@ function row(it) {
   });
   btns.append(main, del);
 
-  li.append(icon, info, arrow, sel, btns);
+  li.append(icon, info, arrow, selects, btns);
   return li;
 }
 
@@ -231,7 +252,9 @@ els.bulkSelect.addEventListener('change', () => {
 });
 
 /* ---------- Convertir y descargar ---------- */
-const outName = (it) => `${baseName(it.file.name)}.${it.result.ext}`;
+// Mismo nombre con la nueva extensión; el PDF aplastado lleva «-reducido»
+const outName = (it, n) =>
+  `${baseName(it.file.name)}${it.result.suffix || ''}${n ? ` (${n})` : ''}.${it.result.ext}`;
 
 function download(blob, name) {
   const url = URL.createObjectURL(blob);
@@ -262,6 +285,7 @@ async function convertItem(it) {
   try {
     it.result = await convert(it.file, it.kind, it.to, {
       base: baseName(it.file.name),
+      level: it.level,
       onProgress: (p) => {
         it.progress = p;
         update();
@@ -304,7 +328,7 @@ async function downloadZip(done) {
   const used = new Set();
   for (const it of done) {
     let name = outName(it);
-    for (let n = 2; used.has(name.toLowerCase()); n++) name = `${baseName(it.file.name)} (${n}).${it.result.ext}`;
+    for (let n = 2; used.has(name.toLowerCase()); n++) name = outName(it, n);
     used.add(name.toLowerCase());
     zip.file(name, it.result.blob);
   }
@@ -326,7 +350,7 @@ for (const [kind, def] of Object.entries(INPUTS)) {
   const h = document.createElement('h3');
   h.textContent = `${FAMILY[def.family].icon} ${kind.toUpperCase()}`;
   const p = document.createElement('p');
-  p.textContent = def.outputs.map((o) => o.toUpperCase()).join(' · ');
+  p.textContent = def.outputs.map((o) => (o === 'pdfmin' ? OUTPUT_LABEL[o] : o.toUpperCase())).join(' · ');
   card.append(h, p);
   grid.append(card);
 }
